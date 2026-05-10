@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#0f0f13">
+<title>Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#0f0f13;
+  --card:#161619;
+  --secondary:#1e1e23;
+  --border:#232328;
+  --border-h:#333;
+  --fg:#e4e4e7;
+  --fg2:#71717a;
+  --fg3:#3f3f46;
+  --accent:#f97316;
+  --accent-10:rgba(249,115,22,.1);
+  --accent-15:rgba(249,115,22,.15);
+  --accent-05:rgba(249,115,22,.05);
+  --red:#ef4444;
+  --red-10:rgba(239,68,68,.1);
+  --green:#22c55e;
+  --green-10:rgba(34,197,94,.1);
+  --sidebar-w:250px;
+  --sidebar-cw:68px;
+  --r:10px;
+  --f:'DM Sans',system-ui,sans-serif;
+  --fm:'JetBrains Mono',monospace;
+}
+html{font-size:14px;-webkit-tap-highlight-color:transparent}
+body{font-family:var(--f);background:var(--bg);color:var(--fg);min-height:100dvh;display:flex;-webkit-font-smoothing:antialiased}
+::selection{background:var(--accent-15);color:#fff}
+::-webkit-scrollbar{width:3px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--fg3);border-radius:3px}
+
+/* ═══ SIDEBAR ═══ */
+.sb{
+  width:var(--sidebar-w);min-height:100dvh;background:#111114;
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;position:fixed;left:0;top:0;bottom:0;z-index:100;
+  transition:width .3s cubic-bezier(.4,0,.2,1),transform .3s;
+}
+.sb.col{width:var(--sidebar-cw)}
+.sb.col .lbl,.sb.col .sec,.sb.col .bname{display:none}
+
+.brand{height:60px;display:flex;align-items:center;padding:0 16px;gap:12px;border-bottom:1px solid var(--border)}
+.bicon{
+  width:34px;height:34px;border-radius:var(--r);background:var(--accent);
+  display:grid;place-items:center;flex-shrink:0;
+  font-family:var(--fm);font-size:.85rem;font-weight:600;color:var(--bg);
+}
+.bname{font-weight:600;font-size:1.05rem;white-space:nowrap;letter-spacing:-.2px}
+
+.sec{font-size:.6rem;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--fg3);padding:20px 16px 6px}
+.nav{list-style:none;padding:4px 8px}
+.ni{
+  display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:8px;
+  color:var(--fg2);cursor:pointer;font-size:.82rem;font-weight:500;
+  transition:all .2s;margin-bottom:1px;position:relative;
+}
+.ni:hover{background:rgba(255,255,255,.03);color:var(--fg)}
+.ni.active{background:var(--secondary);color:var(--fg)}
+.ni.active::before{
+  content:'';position:absolute;left:-8px;top:50%;transform:translateY(-50%);
+  width:3px;height:18px;border-radius:0 3px 3px 0;background:var(--accent);
+}
+.ni svg{width:18px;height:18px;flex-shrink:0;opacity:.5}
+.ni.active svg{opacity:1;color:var(--accent)}
+.ni .badge{
+  margin-left:auto;font-family:var(--fm);font-size:.6rem;font-weight:500;
+  background:var(--accent-10);color:var(--accent);padding:2px 7px;border-radius:8px;
+}
+.cbtn{
+  margin:auto 8px 14px;padding:8px 12px;border-radius:8px;
+  background:transparent;border:1px solid var(--border);color:var(--fg3);
+  cursor:pointer;font-family:var(--f);font-size:.75rem;font-weight:500;
+  display:flex;align-items:center;gap:8px;transition:all .2s;
+}
+.cbtn:hover{border-color:var(--border-h);color:var(--fg2)}
+.cbtn svg{width:16px;height:16px;flex-shrink:0}
+
+/* ═══ MAIN ═══ */
+.mn{margin-left:var(--sidebar-w);flex:1;min-height:100dvh;transition:margin-left .3s cubic-bezier(.4,0,.2,1)}
+.sb.col~.mn{margin-left:var(--sidebar-cw)}
+
+.topbar{
+  height:60px;position:sticky;top:0;z-index:50;
+  background:rgba(15,15,19,.85);backdrop-filter:blur(16px);
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;padding:0 24px;
+}
+.topbar h1{font-size:1.2rem;font-weight:600;letter-spacing:-.3px}
+.topbar-r{display:flex;align-items:center;gap:14px}
+.topbar-status{display:flex;align-items:center;gap:5px;font-size:.7rem;color:var(--accent);font-weight:500}
+.topbar-status .dot{width:5px;height:5px;border-radius:50%;background:var(--accent);animation:p 2.5s infinite}
+@keyframes p{0%,100%{opacity:1}50%{opacity:.3}}
+.topbar-date{font-family:var(--fm);font-size:.65rem;color:var(--fg3);font-weight:300}
+.topbar-av{
+  width:34px;height:34px;border-radius:var(--r);
+  background:var(--accent);display:grid;place-items:center;
+  font-size:.7rem;font-weight:700;color:var(--bg);cursor:pointer;
+}
+
+.ct{padding:24px}
+
+/* ═══ METRIC CARDS ═══ */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.mc{
+  background:var(--card);border:1px solid var(--border);border-radius:12px;
+  padding:20px;position:relative;overflow:hidden;transition:border-color .3s;
+}
+.mc:hover{border-color:var(--border-h)}
+.mc:hover .mc-glow{opacity:1}
+.mc-glow{position:absolute;inset:0;background:linear-gradient(135deg,var(--accent-05),transparent);opacity:0;transition:opacity .5s;pointer-events:none}
+.mc-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:12px}
+.mc-label{font-size:.78rem;color:var(--fg2);font-weight:500}
+.mc-icon{width:34px;height:34px;border-radius:var(--r);background:var(--secondary);display:grid;place-items:center;transition:all .3s}
+.mc:hover .mc-icon{background:var(--accent-10)}
+.mc-icon svg{width:16px;height:16px;color:var(--fg3);transition:color .3s}
+.mc:hover .mc-icon svg{color:var(--accent)}
+.mc-bottom{display:flex;align-items:flex-end;gap:10px}
+.mc-val{font-size:1.8rem;font-weight:700;letter-spacing:-.5px;line-height:1}
+.mc-delta{display:flex;align-items:center;gap:3px;font-size:.75rem;font-weight:500;margin-bottom:3px}
+
+/* ═══ CARD ═══ */
+.crd{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;transition:border-color .3s}
+.crd:hover{border-color:var(--border-h)}
+.crd-h{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.crd-t{font-size:.95rem;font-weight:600;letter-spacing:-.2px}
+.crd-sub{font-size:.75rem;color:var(--fg3);margin-top:2px}
+
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.g32{display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:14px}
+
+/* ═══ LIST ═══ */
+.li{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.li:last-child{border-bottom:none}
+.li-av{width:36px;height:36px;border-radius:var(--r);display:grid;place-items:center;font-size:.75rem;flex-shrink:0;background:var(--secondary);color:var(--fg2)}
+.li-info{flex:1;min-width:0}
+.li-info .nm{font-size:.82rem;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.li-info .mt{font-family:var(--fm);font-size:.62rem;color:var(--fg3);margin-top:2px;font-weight:300}
+.li-amt{font-family:var(--fm);font-size:.82rem;font-weight:600;text-align:right;white-space:nowrap}
+.li-badge{font-size:.6rem;font-weight:500;padding:3px 8px;border-radius:8px;white-space:nowrap;background:var(--secondary);color:var(--fg2)}
+
+/* ═══ PROGRESS ═══ */
+.prog{margin-bottom:14px}
+.prog-top{display:flex;justify-content:space-between;margin-bottom:5px}
+.prog-top .nm{font-size:.8rem;font-weight:500}
+.prog-top .vl{font-family:var(--fm);font-size:.7rem;color:var(--fg2)}
+.prog-bar{height:5px;border-radius:3px;background:var(--secondary);overflow:hidden}
+.prog-fill{height:100%;border-radius:3px;background:var(--accent);transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+
+/* ═══ TASKS ═══ */
+.ti{display:flex;align-items:flex-start;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.ti:last-child{border-bottom:none}
+.ti-ck{
+  width:18px;height:18px;border-radius:5px;border:1.5px solid var(--fg3);
+  flex-shrink:0;cursor:pointer;display:grid;place-items:center;transition:all .2s;margin-top:1px;
+}
+.ti-ck:hover{border-color:var(--accent)}
+.ti-ck.done{background:var(--accent);border-color:var(--accent)}
+.ti-ck.done::after{content:'✓';font-size:.55rem;color:var(--bg);font-weight:800}
+.ti-tx{font-size:.82rem;font-weight:400;line-height:1.5;flex:1}
+.ti-tx.s{text-decoration:line-through;color:var(--fg3)}
+.ti-tag{margin-left:auto;font-size:.6rem;font-weight:500;padding:3px 8px;border-radius:8px;white-space:nowrap;background:var(--secondary);color:var(--fg2)}
+
+/* ═══ CALENDAR ═══ */
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;text-align:center}
+.cal-h{font-size:.55rem;color:var(--fg3);letter-spacing:1px;padding:6px 0;font-weight:600}
+.cal-d{
+  aspect-ratio:1;border-radius:8px;display:grid;place-items:center;
+  font-family:var(--fm);font-size:.72rem;font-weight:300;color:var(--fg3);
+  cursor:pointer;transition:all .2s;position:relative;
+}
+.cal-d:hover{background:var(--accent-10);color:var(--fg)}
+.cal-d.today{background:var(--accent);color:var(--bg);font-weight:600}
+.cal-d.has-ev::after{content:'';position:absolute;bottom:3px;width:3px;height:3px;border-radius:50%;background:var(--accent)}
+.cal-d.today.has-ev::after{background:var(--bg)}
+.cal-d.dim{opacity:.15}
+
+/* ═══ INVESTMENTS ═══ */
+.inv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.inv-spark{height:30px;margin-top:12px;display:flex;align-items:end;gap:2px}
+.inv-spark .b{flex:1;border-radius:2px 2px 0 0;min-width:0;background:var(--accent);opacity:.25;transition:height .8s cubic-bezier(.4,0,.2,1)}
+
+/* ═══ CHART ═══ */
+.chart-w{width:100%;height:200px}
+.chart-w svg{width:100%;height:100%}
+
+/* ═══ CHAT ═══ */
+.msg{display:flex;gap:10px;margin-bottom:14px}
+.msg-av{width:28px;height:28px;border-radius:8px;flex-shrink:0;display:grid;place-items:center;font-size:.6rem;font-weight:700;background:var(--secondary);color:var(--fg2)}
+.msg-bub{background:var(--secondary);border:1px solid var(--border);border-radius:12px 12px 12px 4px;padding:12px 16px;max-width:80%}
+.msg-bub.me{background:var(--accent-05);border-color:var(--accent-15);margin-left:auto;border-radius:12px 12px 4px 12px}
+.msg-bub p{font-size:.8rem;line-height:1.55;font-weight:400}
+.msg-bub .ts{font-family:var(--fm);font-size:.55rem;color:var(--fg3);margin-top:4px}
+
+/* ═══ EMPTY STATES ═══ */
+.empty{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:48px 20px;text-align:center;
+}
+.empty-icon{width:48px;height:48px;border-radius:14px;background:var(--secondary);display:grid;place-items:center;margin-bottom:16px}
+.empty-icon svg{width:22px;height:22px;color:var(--fg3)}
+.empty-t{font-size:.9rem;font-weight:600;margin-bottom:4px}
+.empty-sub{font-size:.78rem;color:var(--fg3);max-width:320px;line-height:1.5}
+
+/* ═══ VIEWS ═══ */
+.view{display:none}
+.view.active{display:block;animation:fadeIn .35s ease both}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* colors */
+.c-a{color:var(--accent)}.c-r{color:var(--red)}.c-g{color:var(--green)}.c-m{color:var(--fg2)}
+
+/* ═══ MOBILE ═══ */
+.mob{display:none;position:fixed;top:12px;left:12px;z-index:200;width:38px;height:38px;border-radius:var(--r);background:#111114;border:1px solid var(--border);color:var(--fg2);cursor:pointer;font-size:1.1rem}
+.ov{display:none;position:fixed;inset:0;z-index:99;background:rgba(0,0,0,.6)}
+@media(max-width:768px){
+  .mob{display:grid;place-items:center}
+  .sb{transform:translateX(-100%);width:var(--sidebar-w)}.sb.open{transform:translateX(0)}
+  .ov.show{display:block}
+  .mn{margin-left:0!important}
+  .topbar{padding-left:58px}
+  .ct{padding:16px}
+  .metrics{grid-template-columns:repeat(2,1fr)}
+  .g2,.g32{grid-template-columns:1fr}
+  .inv-grid{grid-template-columns:1fr}
+}
+.mc{animation:stg .5s ease both}
+.mc:nth-child(1){animation-delay:.05s}.mc:nth-child(2){animation-delay:.1s}.mc:nth-child(3){animation-delay:.15s}.mc:nth-child(4){animation-delay:.2s}
+@keyframes stg{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+</head>
+<body>
+
+<button class="mob" onclick="toggleMob()">☰</button>
+<div class="ov" id="ov" onclick="toggleMob()"></div>
+
+<!-- SIDEBAR -->
+<aside class="sb" id="sb">
+  <div class="brand">
+    <div class="bicon">CC</div>
+    <span class="bname">Command Center</span>
+  </div>
+
+  <div class="sec">Principal</div>
+  <ul class="nav">
+    <li class="ni active" onclick="go('overview',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg><span class="lbl">Overview</span></li>
+    <li class="ni" onclick="go('ingresos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg><span class="lbl">Ingresos</span></li>
+    <li class="ni" onclick="go('inversiones',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg><span class="lbl">Inversiones</span></li>
+    <li class="ni" onclick="go('calendario',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><span class="lbl">Calendario</span></li>
+  </ul>
+
+  <div class="sec">Gestión</div>
+  <ul class="nav">
+    <li class="ni" onclick="go('tareas',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg><span class="lbl">Tareas</span></li>
+    <li class="ni" onclick="go('objetivos',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg><span class="lbl">Objetivos</span></li>
+    <li class="ni" onclick="go('agente',this)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg><span class="lbl">Agente IA</span></li>
+  </ul>
+
+  <button class="cbtn" onclick="colToggle()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="15 18 9 12 15 6"/></svg>
+    <span class="lbl">Collapse</span>
+  </button>
+</aside>
+
+<!-- MAIN -->
+<div class="mn">
+  <div class="topbar">
+    <h1 id="pt">Overview</h1>
+    <div class="topbar-r">
+      <div class="topbar-status"><span class="dot"></span> Agente activo</div>
+      <div class="topbar-date" id="td"></div>
+      <div class="topbar-av">JC</div>
+    </div>
+  </div>
+
+  <div class="ct">
+
+    <!-- OVERVIEW -->
+    <div class="view active" id="v-overview">
+      <div class="metrics">
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Balance ARS</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span><span class="mc-delta c-m">—</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Balance USD</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span><span class="mc-delta c-m">—</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Inversiones</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span><span class="mc-delta c-m">0 activos</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Gastos del Mes</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span><span class="mc-delta c-m">—</span></div></div>
+      </div>
+
+      <div class="g32">
+        <div class="crd">
+          <div class="crd-h"><div><div class="crd-t">Flujo Mensual</div><div class="crd-sub">Ingresos vs egresos</div></div></div>
+          <div class="empty">
+            <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+            <div class="empty-t">Sin datos aún</div>
+            <div class="empty-sub">Registrá ingresos y egresos desde el agente de Telegram para ver el gráfico</div>
+          </div>
+        </div>
+        <div class="crd">
+          <div class="crd-h"><div class="crd-t">Últimos Movimientos</div></div>
+          <div id="ov-mov"></div>
+        </div>
+      </div>
+
+      <div class="g2">
+        <div class="crd">
+          <div class="crd-h"><div class="crd-t">Tareas Pendientes</div></div>
+          <div id="ov-tasks"></div>
+        </div>
+        <div class="crd">
+          <div class="crd-h"><div class="crd-t">Objetivos del Mes</div></div>
+          <div id="ov-obj"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- INGRESOS -->
+    <div class="view" id="v-ingresos">
+      <div class="metrics">
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Ingresos Mes</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Egresos Mes</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 18 13.5 8.5 8.5 13.5 1 6"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Neto</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">TC Blue</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg></div></div><div class="mc-bottom"><span class="mc-val c-m">—</span></div></div>
+      </div>
+      <div class="crd">
+        <div class="crd-t">Movimientos del Mes</div><div class="crd-sub" style="margin-bottom:16px">Todos los ingresos y egresos</div>
+        <div id="ing-list"></div>
+      </div>
+    </div>
+
+    <!-- INVERSIONES -->
+    <div class="view" id="v-inversiones">
+      <div class="metrics">
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Portfolio</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div></div><div class="mc-bottom"><span class="mc-val">$0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Rendimiento</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="mc-bottom"><span class="mc-val c-m">—</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">PnL</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="mc-bottom"><span class="mc-val c-m">—</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Activos</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/></svg></div></div><div class="mc-bottom"><span class="mc-val">0</span></div></div>
+      </div>
+      <div class="inv-grid" id="inv-list"></div>
+    </div>
+
+    <!-- CALENDARIO -->
+    <div class="view" id="v-calendario">
+      <div class="g32">
+        <div class="crd">
+          <div class="crd-h"><div class="crd-t" id="calTitle"></div><div style="display:flex;gap:6px"><button class="cbtn" style="margin:0;padding:6px 10px" onclick="chMo(-1)">‹</button><button class="cbtn" style="margin:0;padding:6px 10px" onclick="chMo(0)">●</button><button class="cbtn" style="margin:0;padding:6px 10px" onclick="chMo(1)">›</button></div></div>
+          <div class="cal" id="calGrid"></div>
+        </div>
+        <div class="crd">
+          <div class="crd-t">Eventos del Día</div>
+          <div class="crd-sub" id="calSub" style="margin-bottom:12px">Seleccioná un día</div>
+          <div id="calEv">
+            <div class="empty" style="padding:32px 16px">
+              <div class="empty-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg></div>
+              <div class="empty-t">Sin eventos</div>
+              <div class="empty-sub">"Agendame reunión el lunes a las 10"</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAREAS -->
+    <div class="view" id="v-tareas">
+      <div class="g2">
+        <div class="crd"><div class="crd-t">Pendientes</div><div class="crd-sub" style="margin-bottom:12px">Tareas activas</div><div id="tar-pending"></div></div>
+        <div class="crd"><div class="crd-t">Completadas</div><div class="crd-sub" style="margin-bottom:12px">Últimos 7 días</div><div id="tar-done"></div></div>
+      </div>
+    </div>
+
+    <!-- OBJETIVOS -->
+    <div class="view" id="v-objetivos">
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Activos</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg></div></div><div class="mc-bottom"><span class="mc-val">0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Completados</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/></svg></div></div><div class="mc-bottom"><span class="mc-val">0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">En riesgo</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div></div><div class="mc-bottom"><span class="mc-val">0</span></div></div>
+      </div>
+      <div class="crd">
+        <div class="crd-t">Objetivos</div><div class="crd-sub" style="margin-bottom:12px">Trackeo automático via agente</div>
+        <div id="obj-list"></div>
+      </div>
+    </div>
+
+    <!-- AGENTE -->
+    <div class="view" id="v-agente">
+      <div class="metrics" style="grid-template-columns:repeat(3,1fr)">
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Estado</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div><div class="mc-bottom"><span class="mc-val c-a" style="font-size:1rem">● Activo</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Mensajes hoy</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg></div></div><div class="mc-bottom"><span class="mc-val">0</span></div></div>
+        <div class="mc"><div class="mc-glow"></div><div class="mc-top"><span class="mc-label">Uptime</span><div class="mc-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/></svg></div></div><div class="mc-bottom"><span class="mc-val">—</span></div></div>
+      </div>
+      <div class="crd">
+        <div class="crd-t">Conversación con el Agente</div><div class="crd-sub" style="margin-bottom:16px">Telegram ↔ Dashboard</div>
+        <div id="agent-log" style="display:flex;flex-direction:column;gap:14px">
+          <div class="msg">
+            <div class="msg-av">IA</div>
+            <div class="msg-bub">
+              <p>Hola Jeremías. Soy tu asistente personal. Escribime por Telegram y todo se refleja acá automáticamente.</p>
+              <p style="font-size:.72rem;color:var(--fg3);margin-top:8px;line-height:1.7">
+                Ejemplos de lo que podés decirme:<br>
+                · "Compré 300usd a 383.400"<br>
+                · "Agendame reunión el lunes a las 10"<br>
+                · "Anotá ingreso 450k de Pérez SA"<br>
+                · "Objetivo: comprar 1000 USD este mes"
+              </p>
+              <div class="ts">Sistema</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+// ═══ SUPABASE ═══
+const SUPABASE_URL='https://bmmvrpbsaatwrcwmoort.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJtbXZycGJzYWF0d3Jjd21vb3J0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzg0MDg1MTAsImV4cCI6MjA5Mzk4NDUxMH0.a01tO8L9gVQQs5R6XcUKPWbsKw6Zs7LPu72dz4s2QqU';
+const sb_client=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+
+// ═══ HELPERS ═══
+const M=['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'];
+const D=['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+const MF=['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const now=new Date();
+document.getElementById('td').textContent=`${D[now.getDay()]} ${now.getDate()} ${M[now.getMonth()]} ${now.getFullYear()}`;
+
+function fmt(n){if(n==null)return'$0';const a=Math.abs(n);if(a>=1e6)return(n<0?'-':'')+'$'+((a/1e6).toFixed(2))+'M';if(a>=1e3)return(n<0?'-':'')+'$'+((a/1e3).toFixed(0))+'K';return(n<0?'-':'')+'$'+a.toFixed(0)}
+function fmtDate(d){const dt=new Date(d);return`${dt.getDate()} ${M[dt.getMonth()]}`}
+function emptyHTML(icon,title,sub){return`<div class="empty"><div class="empty-icon">${icon}</div><div class="empty-t">${title}</div><div class="empty-sub">${sub}</div></div>`}
+const iconSvg={
+  money:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 000 7h5a3.5 3.5 0 010 7H6"/></svg>',
+  chart:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>',
+  cal:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>',
+  check:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>',
+  target:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'
+};
+
+// ═══ NAVIGATION ═══
+function go(id,el){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('v-'+id).classList.add('active');
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('active'));
+  el.classList.add('active');
+  const t={overview:'Overview',ingresos:'Ingresos & Egresos',inversiones:'Inversiones',calendario:'Calendario',tareas:'Tareas',objetivos:'Objetivos',agente:'Agente IA'};
+  document.getElementById('pt').textContent=t[id]||id;
+  if(id==='calendario')renderCal();
+  loadData();
+  document.getElementById('sb').classList.remove('open');
+  document.getElementById('ov').classList.remove('show');
+}
+function colToggle(){document.getElementById('sb').classList.toggle('col')}
+function toggleMob(){document.getElementById('sb').classList.toggle('open');document.getElementById('ov').classList.toggle('show')}
+
+// ═══ LOAD ALL DATA ═══
+async function loadData(){
+  try{
+    const[movR,invR,evR,tarR,objR,msgR]=await Promise.all([
+      sb_client.from('movimientos').select('*').order('fecha',{ascending:false}).limit(20),
+      sb_client.from('inversiones').select('*').order('created_at',{ascending:false}),
+      sb_client.from('eventos').select('*').order('fecha',{ascending:true}),
+      sb_client.from('tareas').select('*').order('created_at',{ascending:false}),
+      sb_client.from('objetivos').select('*').order('created_at',{ascending:false}),
+      sb_client.from('mensajes').select('*').order('created_at',{ascending:false}).limit(30)
+    ]);
+    const mov=movR.data||[];const inv=invR.data||[];const ev=evR.data||[];
+    const tar=tarR.data||[];const obj=objR.data||[];const msg=msgR.data||[];
+
+    renderOverview(mov,inv,tar,obj);
+    renderIngresos(mov);
+    renderInversiones(inv);
+    renderCalEvents(ev);
+    renderTareas(tar);
+    renderObjetivos(obj);
+    renderAgente(msg);
+    updateBadges(tar,ev);
+  }catch(e){console.error('Error loading data:',e)}
+}
+
+// ═══ OVERVIEW ═══
+function renderOverview(mov,inv,tar,obj){
+  const ingresos=mov.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+Number(m.monto),0);
+  const egresos=mov.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+Number(m.monto),0);
+  const usd=mov.filter(m=>m.tipo==='cambio').reduce((s,m)=>s+Number(m.monto),0);
+  const invTotal=inv.reduce((s,i)=>s+(Number(i.precio_actual||i.precio_compra)*Number(i.cantidad)),0);
+
+  // Update metric cards
+  const cards=document.querySelectorAll('#v-overview .mc .mc-val');
+  if(cards[0])cards[0].textContent=fmt(ingresos-egresos);
+  if(cards[1])cards[1].textContent='$'+usd.toFixed(0);
+  if(cards[2])cards[2].textContent='$'+invTotal.toFixed(0);
+  if(cards[3])cards[3].textContent=fmt(egresos);
+
+  // Recent movements
+  const movBox=document.getElementById('ov-mov');
+  if(movBox){
+    if(mov.length===0){
+      movBox.innerHTML=emptyHTML(iconSvg.money,'Sin movimientos','Escribile al agente: "Compré 300usd a 383.400ars"');
+    }else{
+      movBox.innerHTML=mov.slice(0,4).map(m=>`<div class="li"><div class="li-av">${m.tipo==='ingreso'?'↓':m.tipo==='egreso'?'↑':'⇄'}</div><div class="li-info"><div class="nm">${m.descripcion}</div><div class="mt">${fmtDate(m.fecha)}${m.tipo_cambio?' · TC $'+Number(m.tipo_cambio).toFixed(0):''}</div></div><div class="li-amt ${m.tipo==='ingreso'?'c-g':m.tipo==='egreso'?'c-r':'c-a'}">${m.tipo==='ingreso'?'+':'−'}${fmt(m.monto)}</div></div>`).join('');
+    }
+  }
+
+  // Tasks
+  const taskBox=document.getElementById('ov-tasks');
+  if(taskBox){
+    const pending=tar.filter(t=>!t.completada);
+    if(pending.length===0){
+      taskBox.innerHTML=emptyHTML(iconSvg.check,'Todo limpio','Agregá tareas desde el agente');
+    }else{
+      taskBox.innerHTML=pending.slice(0,3).map(t=>`<div class="ti"><div class="ti-ck" data-id="${t.id}"></div><div class="ti-tx">${t.texto}</div><div class="ti-tag">${t.prioridad==='urgente'?'Urgente':t.fecha_limite?fmtDate(t.fecha_limite):'—'}</div></div>`).join('');
+    }
+  }
+
+  // Objectives
+  const objBox=document.getElementById('ov-obj');
+  if(objBox){
+    if(obj.length===0){
+      objBox.innerHTML=emptyHTML(iconSvg.target,'Sin objetivos','Definí metas: "Objetivo: comprar 1000 USD"');
+    }else{
+      objBox.innerHTML=obj.slice(0,3).map(o=>{const pct=Math.min(100,Math.round((Number(o.valor_actual)/Number(o.meta_valor))*100));return`<div class="prog"><div class="prog-top"><span class="nm">${o.titulo}</span><span class="vl">${pct}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div>`}).join('');
+    }
+  }
+}
+
+// ═══ INGRESOS ═══
+function renderIngresos(mov){
+  const ingresos=mov.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+Number(m.monto),0);
+  const egresos=mov.filter(m=>m.tipo==='egreso').reduce((s,m)=>s+Number(m.monto),0);
+  const cards=document.querySelectorAll('#v-ingresos .mc .mc-val');
+  if(cards[0])cards[0].textContent=fmt(ingresos);
+  if(cards[1])cards[1].textContent=fmt(egresos);
+  if(cards[2])cards[2].textContent=fmt(ingresos-egresos);
+
+  const list=document.getElementById('ing-list');
+  if(list){
+    if(mov.length===0){
+      list.innerHTML=emptyHTML(iconSvg.money,'Sin movimientos registrados','Los movimientos que registres por Telegram aparecen acá');
+    }else{
+      list.innerHTML=mov.map(m=>`<div class="li"><div class="li-av">${m.tipo==='ingreso'?'↓':m.tipo==='egreso'?'↑':'⇄'}</div><div class="li-info"><div class="nm">${m.descripcion}</div><div class="mt">${fmtDate(m.fecha)}${m.categoria?' · '+m.categoria:''}${m.tipo_cambio?' · TC $'+Number(m.tipo_cambio).toFixed(0):''}</div></div><div class="li-amt ${m.tipo==='ingreso'?'c-g':m.tipo==='egreso'?'c-r':'c-a'}">${m.tipo==='ingreso'?'+':'−'}${fmt(m.monto)}</div><div class="li-badge">${m.tipo==='ingreso'?'Ingreso':m.tipo==='egreso'?'Egreso':'Cambio'}</div></div>`).join('');
+    }
+  }
+}
+
+// ═══ INVERSIONES ═══
+function renderInversiones(inv){
+  const total=inv.reduce((s,i)=>s+(Number(i.precio_actual||i.precio_compra)*Number(i.cantidad)),0);
+  const cards=document.querySelectorAll('#v-inversiones .mc .mc-val');
+  if(cards[0])cards[0].textContent='$'+total.toFixed(0);
+  if(cards[3])cards[3].textContent=String(inv.length);
+
+  const grid=document.getElementById('inv-list');
+  if(grid){
+    if(inv.length===0){
+      grid.innerHTML=`<div class="crd">${emptyHTML(iconSvg.chart,'Sin inversiones','Registrá: "Compré 5 CEDEAR MELI a $32.400 c/u"')}</div>`;
+    }else{
+      grid.innerHTML=inv.map(i=>{
+        const val=Number(i.precio_actual||i.precio_compra)*Number(i.cantidad);
+        const cost=Number(i.precio_compra)*Number(i.cantidad);
+        const pnl=val-cost;
+        return`<div class="crd"><div style="display:flex;justify-content:space-between;margin-bottom:8px"><span style="font-family:var(--fm);font-size:.8rem;font-weight:500;color:var(--accent)">${i.simbolo}</span><span class="li-badge">${pnl>=0?'+':''}$${pnl.toFixed(0)}</span></div><div style="font-size:.7rem;color:var(--fg2);margin-bottom:6px">${i.nombre||i.simbolo} — ${i.cantidad} u</div><div style="font-family:var(--fm);font-size:1.2rem;font-weight:500">$${val.toFixed(0)}</div><div style="font-family:var(--fm);font-size:.6rem;color:var(--fg3);margin-top:4px">Costo: $${cost.toFixed(0)} · PnL ${pnl>=0?'+':''}$${pnl.toFixed(0)}</div></div>`}).join('');
+    }
+  }
+}
+
+// ═══ CALENDARIO ═══
+let calDate=new Date(now.getFullYear(),now.getMonth(),1);
+let allEvents=[];
+
+function chMo(d){if(d===0)calDate=new Date(now.getFullYear(),now.getMonth(),1);else calDate=new Date(calDate.getFullYear(),calDate.getMonth()+d,1);renderCal()}
+
+function renderCal(){
+  const y=calDate.getFullYear(),m=calDate.getMonth();
+  document.getElementById('calTitle').textContent=`${MF[m]} ${y}`;
+  const g=document.getElementById('calGrid');g.innerHTML='';
+  ['LUN','MAR','MIÉ','JUE','VIE','SÁB','DOM'].forEach(d=>{const e=document.createElement('div');e.className='cal-h';e.textContent=d;g.appendChild(e)});
+  let s=new Date(y,m,1).getDay()-1;if(s<0)s=6;
+  const dim=new Date(y,m+1,0).getDate(),prev=new Date(y,m,0).getDate();
+  for(let i=s-1;i>=0;i--){const e=document.createElement('div');e.className='cal-d dim';e.textContent=prev-i;g.appendChild(e)}
+
+  // Check which days have events
+  const eventDays=new Set();
+  allEvents.forEach(ev=>{
+    const ed=new Date(ev.fecha);
+    if(ed.getFullYear()===y&&ed.getMonth()===m)eventDays.add(ed.getDate());
+  });
+
+  for(let d=1;d<=dim;d++){
+    const e=document.createElement('div');e.className='cal-d';e.textContent=d;
+    if(d===now.getDate()&&m===now.getMonth()&&y===now.getFullYear())e.classList.add('today');
+    if(eventDays.has(d))e.classList.add('has-ev');
+    e.onclick=(()=>{const dd=d;return()=>showDayEvents(y,m,dd)})();
+    g.appendChild(e);
+  }
+}
+
+function renderCalEvents(ev){
+  allEvents=ev;
+  renderCal();
+}
+
+function showDayEvents(y,m,d){
+  document.getElementById('calSub').textContent=`${d} de ${MF[m]}`;
+  const dayEvs=allEvents.filter(ev=>{const dt=new Date(ev.fecha);return dt.getFullYear()===y&&dt.getMonth()===m&&dt.getDate()===d});
+  const c=document.getElementById('calEv');
+  if(dayEvs.length===0){
+    c.innerHTML=`<div class="empty" style="padding:32px 16px"><div class="empty-sub">Sin eventos este día</div></div>`;
+  }else{
+    c.innerHTML=dayEvs.map(ev=>{
+      const dt=new Date(ev.fecha);
+      const time=dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+      return`<div class="li"><div class="li-av">●</div><div class="li-info"><div class="nm">${ev.titulo}</div><div class="mt">${time} · ${ev.categoria||'personal'}</div></div></div>`;
+    }).join('');
+  }
+}
+
+// ═══ TAREAS ═══
+function renderTareas(tar){
+  const pending=tar.filter(t=>!t.completada);
+  const done=tar.filter(t=>t.completada);
+
+  const pBox=document.getElementById('tar-pending');
+  if(pBox){
+    if(pending.length===0){
+      pBox.innerHTML=emptyHTML(iconSvg.check,'Sin tareas pendientes','Agregá desde Telegram: "Anotá tarea: preparar presentación"');
+    }else{
+      pBox.innerHTML=pending.map(t=>`<div class="ti"><div class="ti-ck" data-id="${t.id}"></div><div class="ti-tx">${t.texto}</div><div class="ti-tag">${t.prioridad==='urgente'?'Urgente':t.fecha_limite?fmtDate(t.fecha_limite):'—'}</div></div>`).join('');
+    }
+  }
+  const dBox=document.getElementById('tar-done');
+  if(dBox){
+    if(done.length===0){
+      dBox.innerHTML='<div class="empty" style="padding:32px 16px"><div class="empty-sub">Las tareas completadas aparecen acá</div></div>';
+    }else{
+      dBox.innerHTML=done.slice(0,8).map(t=>`<div class="ti"><div class="ti-ck done"></div><div class="ti-tx s">${t.texto}</div><div class="ti-tag">Hecho</div></div>`).join('');
+    }
+  }
+}
+
+// ═══ OBJETIVOS ═══
+function renderObjetivos(obj){
+  const cards=document.querySelectorAll('#v-objetivos .mc .mc-val');
+  if(cards[0])cards[0].textContent=String(obj.length);
+  if(cards[1])cards[1].textContent=String(obj.filter(o=>Number(o.valor_actual)>=Number(o.meta_valor)).length);
+  if(cards[2])cards[2].textContent=String(obj.filter(o=>{const pct=Number(o.valor_actual)/Number(o.meta_valor);return pct<0.5&&pct>0}).length);
+
+  const box=document.getElementById('obj-list');
+  if(box){
+    if(obj.length===0){
+      box.innerHTML=emptyHTML(iconSvg.target,'Definí tu primer objetivo','"Objetivo: comprar 1000 USD este mes"');
+    }else{
+      box.innerHTML=obj.map(o=>{const pct=Math.min(100,Math.round((Number(o.valor_actual)/Number(o.meta_valor))*100));return`<div class="prog"><div class="prog-top"><span class="nm">${o.titulo}</span><span class="vl">${Number(o.valor_actual).toFixed(0)} / ${Number(o.meta_valor).toFixed(0)} ${o.unidad} — ${pct}%</span></div><div class="prog-bar"><div class="prog-fill" style="width:${pct}%"></div></div></div>`}).join('');
+    }
+  }
+}
+
+// ═══ AGENTE ═══
+function renderAgente(msg){
+  const cards=document.querySelectorAll('#v-agente .mc .mc-val');
+  const todayMsgs=msg.filter(m=>{const d=new Date(m.created_at);return d.toDateString()===now.toDateString()});
+  if(cards[1])cards[1].textContent=String(todayMsgs.length);
+
+  const box=document.getElementById('agent-log');
+  if(box&&msg.length>0){
+    const sorted=[...msg].reverse();
+    const html=sorted.map(m=>{
+      const dt=new Date(m.created_at);
+      const time=dt.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+      if(m.rol==='user'){
+        return`<div class="msg" style="justify-content:flex-end"><div class="msg-bub me"><p>${m.contenido}</p><div class="ts">${fmtDate(m.created_at)} · ${time}</div></div><div class="msg-av" style="background:var(--accent-10);color:var(--accent)">JC</div></div>`;
+      }else{
+        return`<div class="msg"><div class="msg-av">IA</div><div class="msg-bub"><p>${m.contenido}</p><div class="ts">${fmtDate(m.created_at)} · ${time}</div></div></div>`;
+      }
+    }).join('');
+    box.innerHTML+=html;
+  }
+}
+
+// ═══ BADGES ═══
+function updateBadges(tar,ev){
+  const pendCount=tar.filter(t=>!t.completada).length;
+  const todayEvCount=ev.filter(e=>{const d=new Date(e.fecha);return d.toDateString()===now.toDateString()}).length;
+  document.querySelectorAll('.ni').forEach(n=>{
+    const b=n.querySelector('.badge');
+    if(b){
+      const lbl=n.querySelector('.lbl');
+      if(lbl&&lbl.textContent==='Tareas')b.textContent=pendCount||'0';
+      if(lbl&&lbl.textContent==='Calendario')b.textContent=todayEvCount||'0';
+    }
+  });
+}
+
+// ═══ TOGGLE TASK COMPLETION ═══
+document.addEventListener('click',async e=>{
+  if(e.target.classList.contains('ti-ck')&&!e.target.classList.contains('done')){
+    const id=e.target.dataset.id;
+    if(!id)return;
+    e.target.classList.add('done');
+    const tx=e.target.nextElementSibling;if(tx)tx.classList.add('s');
+    await sb_client.from('tareas').update({completada:true,completada_at:new Date().toISOString()}).eq('id',id);
+    setTimeout(()=>loadData(),500);
+  }
+});
+
+// ═══ INIT ═══
+renderCal();
+loadData();
+// Refresh every 30 seconds
+setInterval(loadData,30000);
+</script>
+</body>
+</html>
